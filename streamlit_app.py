@@ -3,7 +3,21 @@ import pandas as pd
 import altair as alt
 
 # Set halaman
-st.set_page_config(page_title="Alfamart KPI Dashboard", layout="wide")
+st.set_page_config(page_title="Alfamart BI Dashboard", page_icon="📊")
+
+# Tambahkan logo Alfamart (teks + garis)
+# Tambahkan ini sebelum st.title()
+logo_html = """
+<div style="text-align:center; padding-top: 10px;">
+    <h1 style="margin-bottom: 0; font-size: 36px;">
+        <span style="color:#035AA6; font-weight: bold;">Alfa</span>
+        <span style="color:#ED1F21; font-style:italic; font-weight: bold;">mart</span>
+    </h1>
+    <div style="height:6px; width:200px; margin:auto; background-color:#ED1F21; border-radius:3px;"></div>
+    <div style="height:6px; width:200px; margin:auto; background-color:#FCD413; border-radius:3px; margin-top:2px;"></div>
+</div>
+"""
+st.markdown(logo_html, unsafe_allow_html=True)
 
 # Judul halaman
 st.title("📊 KPI FINANCIAL DASHBOARD — ALFAMART")
