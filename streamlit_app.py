@@ -1,66 +1,147 @@
-import altair as alt
-import pandas as pd
 import streamlit as st
+import pandas as pd
+import altair as alt
+from PIL import Image
 
-# Show the page title and description.
-st.set_page_config(page_title="Movies dataset", page_icon="🎬")
-st.title("🎬 Movies dataset")
-st.write(
-    """
-    This app visualizes data from [The Movie Database (TMDB)](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata).
-    It shows which movie genre performed best at the box office over the years. Just 
-    click on the widgets below to explore!
-    """
-)
+# =========================
+# SETUP HALAMAN & LOGO
+# =========================
+st.set_page_config(page_title="Alfamart BSC Dashboard", layout="wide")
+st.title("📊 Alfamart Balanced Scorecard Dashboard (2021–2024)")
+st.title("by : Riza Rumayanti Dewi")
+# Load logo
+logo = Image.open("/workspaces/bsc4/data/logo-alfa.jpg")  # Ubah ke path logo kamu
+st.image(logo, width=150)
 
+# =========================
+# DATA PREPARATION
+# =========================
 
-# Load the data from a CSV. We're caching this so it doesn't reload every time the app
-# reruns (e.g. if the user interacts with the widgets).
-@st.cache_data
-def load_data():
-    df = pd.read_csv("data/movies_genres_summary.csv")
-    return df
+# HRM (Learning & Growth)
+hrm_data = pd.DataFrame({
+    "Year": [2021, 2022, 2023, 2024],
+    "Average_Training_Hours": [50.37, 54.61, 76.56, 38.88],
+    "Turnover_Rate": [None, None, None, 2.83],
+    "Appraisal_Percentage": [None, None, None, 90.16]
+})
 
+# Customer
+customer_data = pd.DataFrame({
+    "Year": [2021, 2022, 2023, 2024],
+    "NPS": [None, None, None, 85.82],
+    "Customer_Complaints": [3916, 3420, 5184, 7146],
+    "Resolution_Percentage": [100, 100, 92, 95],
+    "CSAT": [None, None, 86.08, None]
+})
 
-df = load_data()
+# Internal Process
+internal_data = pd.DataFrame({
+    "Year": [2021, 2022, 2023, 2024],
+    "Inventory_Turnover": [8.20, 8.60, 8.30, 8.49],
+    "DSI": [44.51, 42.44, 43.90, 43.00],
+    "Receivables_Turnover": [48.39, 49.39, 45.20, 42.49]
+})
 
-# Show a multiselect widget with the genres using `st.multiselect`.
-genres = st.multiselect(
-    "Genres",
-    df.genre.unique(),
-    ["Action", "Adventure", "Biography", "Comedy", "Drama", "Horror"],
-)
+# Financial
+financial_data = pd.DataFrame({
+    "Year": [2021, 2022, 2023, 2024],
+    "Revenue_Million_Rp": [84904, 96925, 106945, 118227],
+    "Net_Profit_Million_Rp": [1989, 2907, 3484, 3220],
+    "Net_Profit_Margin": [2.34, 3.00, 3.26, 2.66],
+    "ROE": [22.09, 25.38, 22.19, 20.41],
+    "EPS": [47.9, 69.9, 81.97, 77.6]
+})
 
-# Show a slider widget with the years using `st.slider`.
-years = st.slider("Years", 1986, 2006, (2000, 2016))
+# =========================
+# SIDEBAR NAVIGASI
+# =========================
+menu = st.sidebar.radio("📂 Pilih Perspektif:", [
+    "1️⃣ HRM (Learning & Growth)",
+    "2️⃣ Customer",
+    "3️⃣ Internal Business Process",
+    "4️⃣ Financial"
+])
 
-# Filter the dataframe based on the widget input and reshape it.
-df_filtered = df[(df["genre"].isin(genres)) & (df["year"].between(years[0], years[1]))]
-df_reshaped = df_filtered.pivot_table(
-    index="year", columns="genre", values="gross", aggfunc="sum", fill_value=0
-)
-df_reshaped = df_reshaped.sort_values(by="year", ascending=False)
+# =========================
+# HRM DASHBOARD
+# =========================
+if menu.startswith("1️⃣"):
+    st.header("💼 HRM (Learning & Growth) Dashboard")
 
+    col1, col2, col3 = st.columns(3)
+    col1.metric("📘 Avg. Training Hours (2024)", f"{hrm_data['Average_Training_Hours'][3]} jam")
+    col2.metric("🔁 Turnover Rate (2024)", f"{hrm_data['Turnover_Rate'][3]} %")
+    col3.metric("✅ Appraisal Coverage (2024)", f"{hrm_data['Appraisal_Percentage'][3]} %")
 
-# Display the data as a table using `st.dataframe`.
-st.dataframe(
-    df_reshaped,
-    use_container_width=True,
-    column_config={"year": st.column_config.TextColumn("Year")},
-)
+    st.subheader("📈 Trend Rata-rata Jam Pelatihan")
+    chart = alt.Chart(hrm_data).mark_line(point=True, color="#035AA6").encode(
+        x="Year:O", y="Average_Training_Hours:Q"
+    ).properties(height=300)
+    st.altair_chart(chart, use_container_width=True)
 
-# Display the data as an Altair chart using `st.altair_chart`.
-df_chart = pd.melt(
-    df_reshaped.reset_index(), id_vars="year", var_name="genre", value_name="gross"
-)
-chart = (
-    alt.Chart(df_chart)
-    .mark_line()
-    .encode(
-        x=alt.X("year:N", title="Year"),
-        y=alt.Y("gross:Q", title="Gross earnings ($)"),
-        color="genre:N",
-    )
-    .properties(height=320)
-)
-st.altair_chart(chart, use_container_width=True)
+# =========================
+# CUSTOMER DASHBOARD
+# =========================
+elif menu.startswith("2️⃣"):
+    st.header("🛒 Customer Perspective Dashboard")
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("💬 NPS (2024)", "85.82")
+    col2.metric("📉 Total Keluhan (2024)", f"{customer_data['Customer_Complaints'][3]}")
+    col3.metric("✅ Penyelesaian Keluhan (2024)", f"{customer_data['Resolution_Percentage'][3]} %")
+
+    st.subheader("📊 Tren Keluhan Pelanggan")
+    chart = alt.Chart(customer_data).mark_bar(color="#ED1F21").encode(
+        x="Year:O", y="Customer_Complaints:Q"
+    ).properties(height=300)
+    st.altair_chart(chart, use_container_width=True)
+
+# =========================
+# INTERNAL PROCESS DASHBOARD
+# =========================
+elif menu.startswith("3️⃣"):
+    st.header("🏭 Internal Business Process Dashboard")
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("🔁 Inventory Turnover (2024)", f"{internal_data['Inventory_Turnover'][3]}")
+    col2.metric("🗓️ DSI (2024)", f"{internal_data['DSI'][3]} hari")
+    col3.metric("💰 Receivables Turnover (2024)", f"{internal_data['Receivables_Turnover'][3]}")
+
+    st.subheader("📈 Inventory Turnover Over Time")
+    chart = alt.Chart(internal_data).mark_line(point=True, color="#FCD413").encode(
+        x="Year:O", y="Inventory_Turnover:Q"
+    ).properties(height=300)
+    st.altair_chart(chart, use_container_width=True)
+
+# =========================
+# FINANCIAL DASHBOARD
+# =========================
+elif menu.startswith("4️⃣"):
+    st.header("💵 Financial Dashboard")
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("📈 Total Revenue (2024)", f"{financial_data['Revenue_Million_Rp'][3]:,} M")
+    col2.metric("💰 Net Profit (2024)", f"{financial_data['Net_Profit_Million_Rp'][3]:,} M")
+    col3.metric("📊 Net Profit Margin (2024)", f"{financial_data['Net_Profit_Margin'][3]}%")
+
+    st.subheader("📈 Revenue vs Net Profit")
+    chart = alt.Chart(financial_data).transform_fold(
+        ['Revenue_Million_Rp', 'Net_Profit_Million_Rp'],
+        as_=['KPI', 'Value']
+    ).mark_line(point=True).encode(
+        x='Year:O',
+        y='Value:Q',
+        color='KPI:N'
+    ).properties(height=300)
+    st.altair_chart(chart, use_container_width=True)
+
+    st.subheader("📉 ROE dan EPS")
+    chart2 = alt.Chart(financial_data).transform_fold(
+        ['ROE', 'EPS'],
+        as_=['Metric', 'Value']
+    ).mark_bar().encode(
+        x='Year:O',
+        y='Value:Q',
+        color='Metric:N'
+    ).properties(height=300)
+    st.altair_chart(chart2, use_container_width=True)
